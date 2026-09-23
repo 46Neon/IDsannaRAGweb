@@ -1,0 +1,8 @@
+-- IDsanna migration contract. Apply only after comparing it with the existing
+-- schema; this file intentionally contains no destructive statements.
+-- Required invariants:
+-- * document_chunks.embedding remains extensions.vector(1536)
+-- * every user-facing table is protected by RLS
+-- * credit consumption is atomic and idempotent
+-- * Edge Functions, not the client, own private provider keys
+-- Verification queries belong in the deployment checklist.

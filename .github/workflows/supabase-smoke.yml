@@ -1,0 +1,27 @@
+name: Supabase Smoke Test
+on:
+  workflow_dispatch:
+    inputs:
+      require_runtime:
+        description: 'Fail if runtime health is unavailable'
+        required: false
+        default: true
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate public endpoints
+        env:
+          SUPABASE_URL: https://wngojaotfjztpcdijwvp.supabase.co
+        run: |
+          set -euo pipefail
+          for fn in health idsanna-runtime; do
+            code=$(curl -sS -o response.json -w '%{http_code}' --max-time 20 "$SUPABASE_URL/functions/v1/$fn")
+            echo "$fn HTTP $code"
+            cat response.json
+            if [ "${{ inputs.require_runtime }}" = "true" ] && [ "$fn" = "health" ] && [ "$code" = "404" ]; then exit 1; fi
+          done

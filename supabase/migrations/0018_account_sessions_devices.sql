@@ -1,0 +1,7 @@
+alter table public.profiles add column if not exists email_verified_required boolean not null default true; alter table public.profiles add column if not exists login_locked_until timestamptz;
+create table if not exists public.user_sessions(id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, session_hash text not null unique, device_label text, user_agent_hash text, created_at timestamptz not null default now(), last_seen_at timestamptz not null default now(), revoked_at timestamptz, expires_at timestamptz);
+create index if not exists user_sessions_user_idx on public.user_sessions(user_id,last_seen_at desc);
+create table if not exists public.trusted_devices(id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, device_hash text not null, label text, created_at timestamptz not null default now(), last_seen_at timestamptz not null default now(), revoked_at timestamptz, unique(user_id,device_hash));
+alter table public.user_sessions enable row level security; alter table public.trusted_devices enable row level security;
+drop policy if exists sessions_self on public.user_sessions; create policy sessions_self on public.user_sessions for all using(user_id=auth.uid()) with check(user_id=auth.uid());
+drop policy if exists devices_self on public.trusted_devices; create policy devices_self on public.trusted_devices for all using(user_id=auth.uid()) with check(user_id=auth.uid());

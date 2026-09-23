@@ -1,0 +1,37 @@
+project_id = "wngojaotfjztpcdijwvp"
+
+[functions.chat-orchestrator]
+verify_jwt = true
+
+[functions.health]
+verify_jwt = false
+
+[functions.ingest-document]
+verify_jwt = true
+
+[functions.process-document]
+verify_jwt = true
+
+[functions.rag-retrieve]
+verify_jwt = true
+
+[functions.complete-credit]
+verify_jwt = true
+
+[functions.metadata-schema]
+verify_jwt = true
+
+[functions.crud-engine]
+verify_jwt = true
+
+[functions.feed-aggregator]
+verify_jwt = false
+
+[functions.idsanna-runtime]
+verify_jwt = true
+
+[functions.mcp-gateway]
+verify_jwt = true
+
+[functions.consume-credits]
+verify_jwt = true

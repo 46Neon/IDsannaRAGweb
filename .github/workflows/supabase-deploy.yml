@@ -1,0 +1,45 @@
+name: Supabase Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Preflight credentials
+        run: test -n "${SUPABASE_ACCESS_TOKEN:-}"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - name: Link project
+        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF || 'wngojaotfjztpcdijwvp' }}"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - name: Apply database migrations
+        run: supabase db push --include-all
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - name: Deploy Edge Functions
+        run: |
+          for fn in health chat-orchestrator rag-retrieve process-document ingest-document complete-credit metadata-schema consume-credits crud-engine feed-aggregator idsanna-runtime mcp-gateway revoke-session social-recommendations learning-profile; do
+            supabase functions deploy "$fn" --project-ref "${{ secrets.SUPABASE_PROJECT_REF || 'wngojaotfjztpcdijwvp' }}"
+          done
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

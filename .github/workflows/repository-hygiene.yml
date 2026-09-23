@@ -1,0 +1,21 @@
+name: Repository Hygiene
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject generated and private material
+        run: |
+          test ! -d .gradle
+          test ! -f local.properties
+          ! find . -type f \( -name '*.jks' -o -name '*.keystore' -o -name '*.p12' -o -name '*.pem' \) -print -quit | grep .
+      - name: Check repository documentation
+        run: |
+          for file in README.md docs/STATUS.md docs/INSTALL.md docs/CICD.md; do test -f "$file"; done

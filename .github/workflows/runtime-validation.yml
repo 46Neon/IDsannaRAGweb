@@ -1,0 +1,45 @@
+name: Unified Runtime Validation
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/src/main/assets/**'
+      - 'supabase/functions/_shared/**'
+      - 'supabase/functions/chat-orchestrator/**'
+      - '.github/workflows/runtime-validation.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/src/main/assets/**'
+      - 'supabase/functions/_shared/**'
+      - 'supabase/functions/chat-orchestrator/**'
+      - '.github/workflows/runtime-validation.yml'
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate runtime manifest
+        run: |
+          python3 - <<'PY'
+          import json
+          p='app/src/main/assets/runtime-manifest.json'; d=json.load(open(p))
+          assert d['single_entrypoint']=='idsanna-runtime'
+          assert d['compiler']=='unified-agent-compiler'
+          assert len(d['agents'])==8
+          assert d['memory_budget_mb']==100
+          for k in ['auth','chat','retrieve','evaluation','credits','security']: assert k in d['capabilities']
+          PY
+      - name: Validate unified contracts
+        run: |
+          test -f supabase/functions/_shared/agent-contract.ts
+          test -f supabase/functions/_shared/runtime-contract.ts
+          grep -q "compileAgentRequest" supabase/functions/_shared/runtime-contract.ts
+          grep -q "runtime-contract" supabase/functions/chat-orchestrator/index.ts
+          grep -q "GLOBAL_RULES" supabase/functions/_shared/agent-contract.ts
+      - name: Validate function inventory
+        run: |
+          for fn in health chat-orchestrator rag-retrieve process-document ingest-document complete-credit metadata-schema consume-credits crud-engine feed-aggregator idsanna-runtime mcp-gateway revoke-session social-recommendations learning-profile; do test -f "supabase/functions/$fn/index.ts"; done

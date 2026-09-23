@@ -1,0 +1,38 @@
+name: Supabase Validation
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+permissions:
+  contents: read
+jobs:
+  static-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate migration ordering
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(supabase/migrations/*.sql)
+          test "${#files[@]}" -gt 0
+          previous=''
+          for file in "${files[@]}"; do
+            name=$(basename "$file")
+            if [[ -n "$previous" && "$name" < "$previous" ]]; then exit 1; fi
+            previous="$name"
+          done
+      - name: Check required Edge Functions
+        run: |
+          for fn in health chat-orchestrator rag-retrieve process-document ingest-document complete-credit metadata-schema consume-credits crud-engine feed-aggregator idsanna-runtime mcp-gateway revoke-session social-recommendations learning-profile; do
+            test -f "supabase/functions/$fn/index.ts"
+          done
+      - name: Reject provider secrets in Supabase client contracts
+        run: |
+          ! grep -RInE '(GEMINI_API_KEY|GROQ_API_KEY|OPENAI_API_KEY|SUPABASE_SERVICE_ROLE_KEY)[[:space:]]*=' supabase \
+            --exclude='*.md'
