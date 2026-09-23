@@ -1,6 +1,0 @@
-{
-  "supabaseUrl": "",
-  "supabasePublishableKey": "",
-  "chatFunction": "chat-orchestrator",
-  "ragFunction": "rag-retrieve"
-}

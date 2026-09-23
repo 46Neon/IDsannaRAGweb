@@ -1,4 +1,0 @@
-<resources>
-    <string name="app_name">IDsanna RAG</string>
-    <string name="accessibility_service_description">Asistencia opcional y controlada del navegador. Solo observa navegadores permitidos y requiere confirmación del usuario para cada acción.</string>
-</resources>
